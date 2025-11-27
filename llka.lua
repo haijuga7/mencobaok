@@ -443,7 +443,7 @@ CDY = MainSection:Input({
     Callback = function(value)
         minigameDelay = value
         if fishMode == 'Blatant v2' then
-            local iil = ((value + 0.3) / 2) + 0.02
+            local iil = ((value + 0.3) / 2) + 0.12
             FDY:Set(iil)
         end
     end
