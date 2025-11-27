@@ -390,8 +390,8 @@ MainSection:Dropdown({
             FDY:Set(1.9765)
             CDY:Set(1.0)
         else
-            FDY:Set(1.90)
-            CDY:Set(3.30)
+            FDY:Set(2.02)
+            CDY:Set(3.50)
             RDY:Set(0.3)
         end
         WindUI:Notify({
@@ -432,7 +432,7 @@ FDY = MainSection:Input({
     Callback = function(value)
         cycleDelay = value
     end
-})
+})/(;7)
 
 -- Minigame Delay (FIXED WITH VALIDATION)
 CDY = MainSection:Input({
@@ -442,6 +442,8 @@ CDY = MainSection:Input({
     Placeholder = "Default: 1",
     Callback = function(value)
         minigameDelay = value
+        local iil = ((value + 0.3) / 2) + 0.02
+        FDY:Set(iil)
     end
 })
 
@@ -672,7 +674,7 @@ weatherTab:Toggle({
                         Content = "Purchasing " .. #weather .. " weather(s)",
                         Duration = 1
                     })
-                    task.wait(90)
+                    task.wait(120)
                 end
             end)
         else
@@ -927,13 +929,13 @@ local LocationTPSection = TeleportTab:Section({
 
 -- Data lokasi teleport (FIXED SYNTAX)
 local TPdata = {
-    {name = "Ancient Jungle", cframe = CFrame.new(1896.9, 8.4, -577.5)},
-    {name = "Ancient Ruin", cframe = CFrame.new(6090.0, -585.9, 4634.0)},
-    {name = "Classic Event", cframe = CFrame.new(1439.0,46.0,2779.0)},
-    {name = "Creator Island", cframe = CFrame.new(979.0, 47.6, 5086.0)},
-    {name = "Esoteric Depth", cframe = CFrame.new(3189.7, -1302.9, 1406.9)},
+    {name = "Ancient Jungle", cframe = CFrame.new(1896.9, 8.4, -577.5), cf = {1.97, 3.5}},
+    {name = "Ancient Ruin", cframe = CFrame.new(6090.0, -585.9, 4634.0), cf = {1.978, 3.5}},
+    {name = "Classic Event", cframe = CFrame.new(1439.0,46.0,2779.0), cf = {1.97, 3.5}},
+    {name = "Creator Island", cframe = CFrame.new(979.0, 47.6, 5086.0), cf = {1.965, 3.4}},
+    {name = "Esoteric Depth", cframe = CFrame.new(3189.7, -1302.9, 1406.9), cf = {1.9, 3.3}},
     {name = "Iron Cafe", cframe = CFrame.new(-8642.0, -547.5, 162.0)},
-    {name = "Iron Cavern", cframe = CFrame.new(-8792.0,-585.0,223.0)},
+    {name = "Iron Cavern", cframe = CFrame.new(-8792.0,-585.0,223.0), cf = },
     {name = "Sacred Ruin", cframe = CFrame.new(1526.1, 4.9, -637.4)},
     {name = "Tropical Grove", cframe = CFrame.new(-2139.0, 53.5, 3624.0)}
 }
@@ -984,10 +986,245 @@ for _, location in ipairs(TPdata) do
         end
     })
 end
+
 -- ==================== Setting TAB ====================
 local SettingTab = Window:Tab({
     Title = "Setting",
     Icon = "settings"
+})
+
+local PerformanceSection = SettingTab:Section({
+    Title = "Performance Settings",
+    Opened = true
+})
+
+-- Variabel untuk tracking FPS boost status
+local fpsBoostEnabled = false
+local render3DDisabled = false
+
+-- Fungsi untuk boost FPS
+local function toggleFPSBoost(state)
+    fpsBoostEnabled = state
+    
+    local RunService = game:GetService("RunService")
+    local Lighting = game:GetService("Lighting")
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+    
+    if state then
+        -- ========== EXTREME FPS BOOST - FORCED VERSION ==========
+        task.spawn(function()
+            -- === STEP 1: DESTROY ALL VISUAL EFFECTS ===
+            for _, obj in pairs(workspace:GetDescendants()) do
+                task.spawn(function()
+                    pcall(function()
+                        -- Destroy particles & effects
+                        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") 
+                            or obj:IsA("Fire") or obj:IsA("Sparkles") or obj:IsA("Beam") then
+                            obj:Destroy()
+                        end
+                        
+                        -- Destroy lights
+                        if obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+                            obj:Destroy()
+                        end
+                        
+                        -- Remove decals & textures
+                        if obj:IsA("Decal") then
+                            obj:Destroy()
+                        end
+                        
+                        if obj:IsA("Texture") then
+                            obj:Destroy()
+                        end
+                        
+                        -- Simplify parts
+                        if obj:IsA("BasePart") then
+                            obj.Material = Enum.Material.SmoothPlastic
+                            obj.Reflectance = 0
+                            obj.CastShadow = false
+                        end
+                        
+                        -- Remove meshes
+                        if obj:IsA("SpecialMesh") then
+                            obj.TextureId = ""
+                            obj.MeshId = ""
+                        end
+                        
+                        if obj:IsA("MeshPart") then
+                            obj.TextureID = ""
+                        end
+                    end)
+                end)
+            end
+            
+            -- === STEP 2: LIGHTING TO MINIMUM ===
+            pcall(function()
+                Lighting.GlobalShadows = false
+                Lighting.FogEnd = 9e9
+                Lighting.FogStart = 0
+                Lighting.Brightness = 0
+                Lighting.ClockTime = 12
+                Lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+                Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+            end)
+            
+            -- === STEP 3: DESTROY POST EFFECTS ===
+            for _, effect in pairs(Lighting:GetChildren()) do
+                if effect:IsA("PostEffect") then
+                    effect:Destroy()
+                end
+            end
+            
+            -- === STEP 4: TERRAIN SETTINGS ===
+            if Terrain then
+                pcall(function()
+                    Terrain.WaterWaveSize = 0
+                    Terrain.WaterWaveSpeed = 0
+                    Terrain.WaterReflectance = 0
+                    Terrain.WaterTransparency = 1
+                    Terrain.Decoration = false
+                end)
+            end
+            
+            -- === STEP 5: RENDERING SETTINGS ===
+            pcall(function()
+                local sethidden = sethiddenproperty or set_hidden_property or set_hidden_prop
+                if sethidden then
+                    sethidden(game, "Lighting.GlobalShadows", false)
+                    sethidden(workspace, "EnvironmentDiffuseScale", 0)
+                    sethidden(workspace, "EnvironmentSpecularScale", 0)
+                end
+            end)
+            
+            -- === STEP 6: USER SETTINGS ===
+            pcall(function()
+                UserSettings():GetService("UserGameSettings").SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
+            end)
+            
+            -- === STEP 7: REMOVE SKY ===
+            for _, obj in pairs(Lighting:GetChildren()) do
+                if obj:IsA("Sky") or obj:IsA("Atmosphere") or obj:IsA("Clouds") then
+                    obj:Destroy()
+                end
+            end
+            
+            -- === STEP 8: MONITOR NEW EFFECTS ===
+            _G.FPSBoostConnection = workspace.DescendantAdded:Connect(function(obj)
+                if not fpsBoostEnabled then return end
+                
+                task.spawn(function()
+                    pcall(function()
+                        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") 
+                            or obj:IsA("Fire") or obj:IsA("Sparkles") or obj:IsA("Beam")
+                            or obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+                            task.wait(0.1)
+                            obj:Destroy()
+                        end
+                    end)
+                end)
+            end)
+            
+            -- === STEP 9: FORCE LOW QUALITY ===
+            task.spawn(function()
+                while fpsBoostEnabled do
+                    pcall(function()
+                        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+                    end)
+                    task.wait(1)
+                end
+            end)
+            
+            print("✅ EXTREME FPS Boost Applied - All visual effects removed")
+        end)
+        
+    else
+        -- ========== RESTORE GRAPHICS ==========
+        pcall(function()
+            -- Disconnect monitor
+            if _G.FPSBoostConnection then
+                _G.FPSBoostConnection:Disconnect()
+                _G.FPSBoostConnection = nil
+            end
+            
+            -- Restore lighting
+            Lighting.GlobalShadows = true
+            Lighting.FogEnd = 100000
+            Lighting.Brightness = 1
+            Lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+            Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+            
+            -- Restore terrain
+            if Terrain then
+                Terrain.WaterWaveSize = 0.15
+                Terrain.WaterWaveSpeed = 10
+                Terrain.WaterReflectance = 1
+                Terrain.WaterTransparency = 0.3
+                Terrain.Decoration = true
+            end
+            
+            -- Restore quality
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+            
+            UserSettings():GetService("UserGameSettings").SavedQualityLevel = Enum.SavedQualitySetting.Automatic
+        end)
+        
+        print("✅ FPS Boost Disabled - Graphics Restored")
+    end
+end
+
+-- Fungsi untuk disable 3D render
+local function toggleRender3D(state)
+    render3DDisabled = not state
+    
+    local RunService = game:GetService("RunService")
+    
+    if not state then
+        -- DISABLE 3D RENDERING
+        pcall(function()
+            RunService:Set3dRenderingEnabled(false)
+        end)
+        
+        print("✅ 3D Rendering Disabled")
+    else
+        -- ENABLE 3D RENDERING
+        pcall(function()
+            RunService:Set3dRenderingEnabled(true)
+        end)
+        
+        print("✅ 3D Rendering Enabled")
+    end
+end
+
+-- Toggle FPS Boost
+PerformanceSection:Toggle({
+    Title = "🚀 FPS Boost Mode",
+    Description = "Ultra low graphics untuk performa maksimal (cocok untuk AFK)",
+    Value = false,
+    Callback = function(state)
+        toggleFPSBoost(state)
+        
+        WindUI:Notify({
+            Title = state and "✅ FPS Boost ON" or "⚙️ FPS Boost OFF",
+            Content = state and "Graphics set to ultra low" or "Graphics restored to normal",
+            Duration = 2
+        })
+    end
+})
+
+-- Toggle 3D Render
+PerformanceSection:Toggle({
+    Title = "👁️ Enable 3D Rendering",
+    Description = "Disable untuk FPS tertinggi (layar hitam tapi game tetap jalan)",
+    Value = true,
+    Callback = function(state)
+        toggleRender3D(state)
+        
+        WindUI:Notify({
+            Title = state and "✅ 3D Render ON" or "🚫 3D Render OFF",
+            Content = state and "Rendering enabled" or "Rendering disabled - screen will be black",
+            Duration = 3
+        })
+    end
 })
 
 local function DisableOk(siap, opsi)
