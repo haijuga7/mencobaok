@@ -273,7 +273,7 @@ local function startAutoFish()
         
         while active do
             if fishMode == "Instant" then
-                task.spawn(autoFish)
+                autoFish()
             elseif fishMode == "Blatant v1" then
                 task.spawn(blatantFishv1)
             else
