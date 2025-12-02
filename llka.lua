@@ -382,8 +382,8 @@ MainSection:Dropdown({
             FDY:Set(1.995)
             CDY:Set(1.0)
         else
-            FDY:Set(1.995)
-            CDY:Set(3.50)
+            FDY:Set(1.99)
+            CDY:Set(3.45)
             RDY:Set(0.3)
         end
         WindUI:Notify({
