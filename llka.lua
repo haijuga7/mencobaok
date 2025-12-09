@@ -1749,11 +1749,6 @@ local function startHookFish()
                 
                 task.spawn(savedLocFunc)
                 return
-            else
-                fishCaughtCount = 0
-                fishLoop = fishLoop + 1
-                task.spawn(savedLocFunc)
-                return
             end
         end
     end)
