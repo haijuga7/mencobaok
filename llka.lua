@@ -567,10 +567,10 @@ MainSection:Dropdown({
             FDY:Set(0.1)
             CDY:Set(1.3)
         elseif option == "Blatant v1" then
-            FDY:Set(1.995)
+            FDY:Set(1.98)
             CDY:Set(1.0)
         else
-            FDY:Set(1.995)
+            FDY:Set(1.98)
             CDY:Set(3.50)
             RDY:Set(0.3)
         end
