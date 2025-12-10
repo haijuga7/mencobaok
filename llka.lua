@@ -1591,11 +1591,11 @@ end
 local fishCaughtCount = 0
 local fishCounterActive = false
 local fishCounterConnection = nil
-local fishMax = 4000
+local fishMax = 500
 local fishStatus = nil
 local fishLoop = 0
-local maxLegends = 6
-local maxMitos = 3
+local maxLegends = 4
+local maxMitos = 2
 local fishLegend = 0
 local fishMitos = 0
 local fishSecret = 0
