@@ -2072,7 +2072,7 @@ local function getServers()
     for page = 1, 3 do -- Kurangi jadi 3 page untuk lebih cepat
         local success, result = pcall(function()
             local url = string.format(
-                "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100&excludeFullGames=true",
+                "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true",
                 game.PlaceId
             )
             
