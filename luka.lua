@@ -324,7 +324,7 @@ local function startAutoFish()
         if fishMode == "Instant" then
             instantLoopThread = task.spawn(function()
                 while true do
-                    autofish()
+                    autoFish()
                     task.wait(cycleDelay)
                 end
             end)
@@ -1052,8 +1052,8 @@ MainSection:Dropdown({
             FDY:Set(1.90)
             CDY:Set(0.8)
         else
-            FDY:Set(0.65)
-            CDY:Set(0.2)
+            FDY:Set(1.79)
+            CDY:Set(0.7)
             RDY:Set(0.3)
         end
         WindUI:Notify({
