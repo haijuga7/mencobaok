@@ -1,252 +1,309 @@
 #!/system/bin/sh
 
-# =================================================
-# KAERU ROBLOX MULTI INSTANCE MANAGER (SIMPLIFIED)
-# =================================================
+# ==============================================
+# KAERU ROBLOX WINDOW ARRANGER (RESIZE ONLY)
+# ==============================================
 
+# ---------- CONFIG ----------
 MAX_INSTANCE=10
-CHECK_INTERVAL=5
-CACHE_INTERVAL=900  # 15 menit
-RAM_THRESHOLD=500   # MB
+GRID_COLS=2           # 2 kolom
+GRID_ROWS=5           # maks 5 baris (untuk 10 instance)
+MARGIN=5              # margin antar window
+TITLEBAR_HEIGHT=80    # tinggi title bar
 
-# ---------- SIMPLE LOGGING ----------
+# ---------- FUNCTIONS ----------
 log() {
   echo "[$(date '+%H:%M:%S')] $1"
 }
 
-# ---------- GET RAM INFO ----------
-get_ram() {
-  FREE=$(cat /proc/meminfo 2>/dev/null | grep MemAvailable | awk '{print int($2/1024)}' || echo 500)
-  TOTAL=$(cat /proc/meminfo 2>/dev/null | grep MemTotal | awk '{print int($2/1024)}' || echo 4096)
-  [ -z "$FREE" ] && FREE=500
-  [ -z "$TOTAL" ] && TOTAL=4096
+get_screen_size() {
+  SCREEN_INFO=$(wm size 2>/dev/null | grep -o "[0-9]\+x[0-9]\+")
+  if [ -n "$SCREEN_INFO" ]; then
+    SCREEN_W=$(echo "$SCREEN_INFO" | cut -dx -f1)
+    SCREEN_H=$(echo "$SCREEN_INFO" | cut -dx -f2)
+  else
+    # Default untuk layar 1080x2400
+    SCREEN_W=1080
+    SCREEN_H=2400
+  fi
+  log "Screen: ${SCREEN_W}x${SCREEN_H}"
 }
 
-# ---------- CLEAN CACHE ----------
-clean_cache() {
-  log "Cleaning cache..."
-  # Hanya bersihkan cache untuk package Roblox
-  for pkg in $PACKAGES; do
-    if [ -d "/data/data/$pkg/cache" ]; then
-      rm -rf /data/data/$pkg/cache/* 2>/dev/null
-      log "  Cleared cache for $pkg"
-    fi
-  done
-  sync
-}
-
-# ---------- DETECT PACKAGES ----------
-detect_packages() {
+get_roblox_packages() {
   PACKAGES=$(pm list packages 2>/dev/null | grep -i roblox | cut -d: -f2 | head -n $MAX_INSTANCE)
   COUNT=$(echo "$PACKAGES" | wc -l)
+  
   if [ "$COUNT" -eq 0 ]; then
-    log "ERROR: No Roblox packages found!"
-    return 1
+    log "No Roblox packages found!"
+    exit 1
   fi
-  return 0
+  
+  log "Found $COUNT Roblox packages"
+  echo "$PACKAGES" | while read pkg; do
+    log "  - $pkg"
+  done
 }
 
-# ---------- CHECK IF RUNNING ----------
-is_running() {
-  pkg=$1
-  # Check using ps
-  if ps -A 2>/dev/null | grep -q "$pkg"; then
-    return 0
-  fi
-  # Check using pidof
-  if pidof "$pkg" >/dev/null 2>&1; then
-    return 0
-  fi
-  return 1
+get_task_info() {
+  PKG=$1
+  # Cari task ID dari package
+  TASK_INFO=$(am stack list 2>/dev/null | grep -B2 -A2 "$PKG")
+  
+  # Extract task ID
+  TASK_ID=$(echo "$TASK_INFO" | grep "taskId=" | sed 's/.*taskId=//g' | awk '{print $1}' | head -1)
+  
+  # Extract window bounds jika ada
+  BOUNDS=$(echo "$TASK_INFO" | grep "bounds=" | sed 's/.*bounds=\[//g;s/\].*//g')
+  
+  echo "$TASK_ID $BOUNDS"
 }
 
-# ---------- LAUNCH APP ----------
-launch_app() {
-  pkg=$1
-  idx=$2
+arrange_windows() {
+  log "Starting window arrangement..."
   
-  log "Launching $pkg (idx:$idx)..."
+  # Hitung ukuran window
+  TOTAL_MARGIN_W=$(( (GRID_COLS + 1) * MARGIN ))
+  TOTAL_MARGIN_H=$(( (GRID_ROWS + 1) * MARGIN + (GRID_ROWS * TITLEBAR_HEIGHT) ))
   
-  # Coba berbagai cara untuk launch
-  success=0
+  WINDOW_W=$(( (SCREEN_W - TOTAL_MARGIN_W) / GRID_COLS ))
+  WINDOW_H=$(( (SCREEN_H - TOTAL_MARGIN_H) / GRID_ROWS ))
   
-  # Cara 1: Standard launch
-  am start --user 0 -a android.intent.action.MAIN \
-    --activity-options '{"android.activity.windowingMode":5}' \
-    -n "$pkg/$pkg.ActivitySplash" >/dev/null 2>&1
+  log "Window size: ${WINDOW_W}x${WINDOW_H}"
   
-  if [ $? -eq 0 ]; then
-    success=1
-  else
-    # Cara 2: Coba tanpa activity specifik
-    am start --user 0 -a android.intent.action.MAIN \
-      --activity-options '{"android.activity.windowingMode":5}' \
-      "$pkg" >/dev/null 2>&1
-    [ $? -eq 0 ] && success=1
-  fi
-  
-  if [ $success -eq 1 ]; then
-    sleep 2
-    # Coba resize window jika berhasil
-    resize_window "$pkg" "$idx"
-    return 0
-  else
-    log "Failed to launch $pkg"
-    return 1
-  fi
-}
-
-# ---------- RESIZE WINDOW ----------
-resize_window() {
-  pkg=$1
-  idx=$2
-  
-  # Dapatkan task ID
-  sleep 1
-  task_id=$(am stack list 2>/dev/null | grep -A2 "$pkg" | grep "taskId=" | sed 's/.*taskId=//' | awk '{print $1}' | head -1)
-  
-  if [ -n "$task_id" ] && [ "$task_id" != "null" ]; then
-    # Hitung posisi grid sederhana (2 kolom)
-    if [ $idx -lt 2 ]; then
-      col=$idx
-      row=0
-    else
-      col=$((idx % 2))
-      row=$((idx / 2))
+  # Atur semua window
+  INDEX=0
+  for PKG in $PACKAGES; do
+    log "Processing $PKG..."
+    
+    # Dapatkan task info
+    TASK_INFO=$(get_task_info "$PKG")
+    TASK_ID=$(echo "$TASK_INFO" | awk '{print $1}')
+    
+    if [ -z "$TASK_ID" ] || [ "$TASK_ID" = "null" ] || [ "$TASK_ID" = "0" ]; then
+      log "  No active task found, skipping..."
+      continue
     fi
     
-    width=540  # Setengah layar
-    height=1200
+    log "  Task ID: $TASK_ID"
     
-    x=$((col * width))
-    y=$((row * height))
+    # Hitung posisi grid
+    ROW=$((INDEX / GRID_COLS))
+    COL=$((INDEX % GRID_COLS))
     
-    log "Resizing $pkg to $width x $height at $x,$y"
+    POS_X=$(( (COL * (WINDOW_W + MARGIN)) + MARGIN ))
+    POS_Y=$(( (ROW * (WINDOW_H + MARGIN + TITLEBAR_HEIGHT)) + MARGIN ))
     
-    # Coba berbagai cara resize
-    wm resize-task "$task_id" "$x" "$y" "$width" "$height" >/dev/null 2>&1
-    sleep 0.5
-    wm task position "$task_id" "$x" "$y" >/dev/null 2>&1
-    sleep 0.5
-    wm task resize "$task_id" "$width" "$height" >/dev/null 2>&1
-  fi
+    log "  Position: Grid [${ROW},${COL}] -> ${POS_X},${POS_Y}"
+    
+    # 1. Pastikan dalam mode freeform
+    wm task windowing-mode $TASK_ID 5 >/dev/null 2>&1
+    sleep 0.1
+    
+    # 2. Set posisi
+    wm task position $TASK_ID $POS_X $POS_Y >/dev/null 2>&1
+    sleep 0.1
+    
+    # 3. Set ukuran
+    wm task resize $TASK_ID $WINDOW_W $WINDOW_H >/dev/null 2>&1
+    sleep 0.1
+    
+    # 4. Juga coba dengan resize-task (metode alternatif)
+    wm resize-task $TASK_ID $POS_X $POS_Y $WINDOW_W $WINDOW_H >/dev/null 2>&1
+    sleep 0.1
+    
+    # 5. Bawa ke depan
+    am task lock $TASK_ID >/dev/null 2>&1
+    sleep 0.1
+    
+    INDEX=$((INDEX + 1))
+    
+    # Delay antar window
+    sleep 0.3
+  done
+  
+  log "Arranged $INDEX windows"
 }
 
-# ---------- MAIN SCRIPT ----------
-log "Starting Kaeru Roblox Manager..."
+arrange_cascade() {
+  log "Arranging windows in cascade style..."
+  
+  CASCADE_OFFSET=60
+  BASE_W=$((SCREEN_W * 70 / 100))
+  BASE_H=$((SCREEN_H * 70 / 100))
+  
+  INDEX=0
+  for PKG in $PACKAGES; do
+    TASK_INFO=$(get_task_info "$PKG")
+    TASK_ID=$(echo "$TASK_INFO" | awk '{print $1}')
+    
+    if [ -z "$TASK_ID" ] || [ "$TASK_ID" = "null" ]; then
+      continue
+    fi
+    
+    POS_X=$((INDEX * CASCADE_OFFSET))
+    POS_Y=$((INDEX * CASCADE_OFFSET))
+    
+    # Jika keluar dari layar, reset posisi
+    if [ $((POS_X + BASE_W)) -gt $SCREEN_W ] || [ $((POS_Y + BASE_H)) -gt $SCREEN_H ]; then
+      POS_X=0
+      POS_Y=0
+    fi
+    
+    log "Cascade $PKG to $POS_X,$POS_Y"
+    
+    wm task windowing-mode $TASK_ID 5 >/dev/null 2>&1
+    sleep 0.1
+    wm task position $TASK_ID $POS_X $POS_Y >/dev/null 2>&1
+    sleep 0.1
+    wm task resize $TASK_ID $BASE_W $BASE_H >/dev/null 2>&1
+    sleep 0.1
+    
+    INDEX=$((INDEX + 1))
+    sleep 0.3
+  done
+}
 
-# Deteksi package pertama kali
-if ! detect_packages; then
-  exit 1
+arrange_horizontal() {
+  log "Arranging windows horizontally..."
+  
+  WINDOW_W=$((SCREEN_W / COUNT))
+  WINDOW_H=$((SCREEN_H * 80 / 100))
+  
+  INDEX=0
+  for PKG in $PACKAGES; do
+    TASK_INFO=$(get_task_info "$PKG")
+    TASK_ID=$(echo "$TASK_INFO" | awk '{print $1}')
+    
+    if [ -z "$TASK_ID" ] || [ "$TASK_ID" = "null" ]; then
+      continue
+    fi
+    
+    POS_X=$((INDEX * WINDOW_W))
+    POS_Y=0
+    
+    log "Horizontal $PKG to $POS_X,0"
+    
+    wm task windowing-mode $TASK_ID 5 >/dev/null 2>&1
+    sleep 0.1
+    wm task position $TASK_ID $POS_X $POS_Y >/dev/null 2>&1
+    sleep 0.1
+    wm task resize $TASK_ID $WINDOW_W $WINDOW_H >/dev/null 2>&1
+    sleep 0.1
+    
+    INDEX=$((INDEX + 1))
+    sleep 0.3
+  done
+}
+
+show_menu() {
+  clear 2>/dev/null || printf "\033c"
+  echo "========================================"
+  echo "   KAERU ROBLOX WINDOW ARRANGER"
+  echo "========================================"
+  get_screen_size
+  get_roblox_packages
+  echo "----------------------------------------"
+  echo "  [1] Grid Layout (${GRID_COLS}x)"
+  echo "  [2] Cascade Layout"
+  echo "  [3] Horizontal Layout"
+  echo "  [4] Custom Layout Setup"
+  echo "  [5] Refresh Package List"
+  echo "  [0] Exit"
+  echo "----------------------------------------"
+  echo -n " Select: "
+}
+
+custom_setup() {
+  clear
+  echo "=== Custom Layout Setup ==="
+  echo ""
+  echo -n "Grid Columns (default $GRID_COLS): "
+  read cols
+  [ -n "$cols" ] && GRID_COLS=$cols
+  
+  echo -n "Grid Rows (default $GRID_ROWS): "
+  read rows
+  [ -n "$rows" ] && GRID_ROWS=$rows
+  
+  echo -n "Margin (default $MARGIN): "
+  read margin
+  [ -n "$margin" ] && MARGIN=$margin
+  
+  echo -n "Titlebar Height (default $TITLEBAR_HEIGHT): "
+  read titlebar
+  [ -n "$titlebar" ] && TITLEBAR_HEIGHT=$titlebar
+  
+  echo "Settings updated!"
+  echo "Press Enter to continue..."
+  read
+}
+
+# ---------- MAIN ----------
+main() {
+  # Dapatkan info layar
+  get_screen_size
+  
+  # Dapatkan packages
+  get_roblox_packages
+  
+  while true; do
+    show_menu
+    read choice
+    
+    case $choice in
+      1)
+        arrange_windows
+        echo "Grid layout applied!"
+        sleep 2
+        ;;
+      2)
+        arrange_cascade
+        echo "Cascade layout applied!"
+        sleep 2
+        ;;
+      3)
+        arrange_horizontal
+        echo "Horizontal layout applied!"
+        sleep 2
+        ;;
+      4)
+        custom_setup
+        ;;
+      5)
+        get_roblox_packages
+        echo "Package list refreshed!"
+        sleep 2
+        ;;
+      0)
+        log "Exiting..."
+        exit 0
+        ;;
+      *)
+        echo "Invalid choice!"
+        sleep 1
+        ;;
+    esac
+  done
+}
+
+# ---------- QUICK ARRANGE MODE ----------
+# Jika dijalankan dengan parameter, langsung arrange
+if [ "$1" = "grid" ]; then
+  get_screen_size
+  get_roblox_packages
+  arrange_windows
+  exit 0
+elif [ "$1" = "cascade" ]; then
+  get_screen_size
+  get_roblox_packages
+  arrange_cascade
+  exit 0
+elif [ "$1" = "horizontal" ]; then
+  get_screen_size
+  get_roblox_packages
+  arrange_horizontal
+  exit 0
 fi
 
-log "Found $COUNT Roblox packages"
-
-# Setup layar
-SCREEN_SIZE=$(wm size 2>/dev/null | grep -o "[0-9]\+x[0-9]\+" || echo "1080x2400")
-SCREEN_W=$(echo "$SCREEN_SIZE" | cut -dx -f1)
-SCREEN_H=$(echo "$SCREEN_SIZE" | cut -dx -f2)
-
-[ -z "$SCREEN_W" ] && SCREEN_W=1080
-[ -z "$SCREEN_H" ] && SCREEN_H=2400
-
-log "Screen size: ${SCREEN_W}x${SCREEN_H}"
-
-# Launch semua app
-idx=0
-for pkg in $PACKAGES; do
-  if ! is_running "$pkg"; then
-    launch_app "$pkg" "$idx"
-  else
-    log "$pkg is already running"
-  fi
-  idx=$((idx + 1))
-done
-
-# Main monitoring loop
-last_clean=$(date +%s)
-clean_counter=0
-
-while true; do
-  # Update package list setiap 10 iterasi
-  if [ $((clean_counter % 10)) -eq 0 ]; then
-    detect_packages
-  fi
-  
-  # Bersihkan UI
-  clear 2>/dev/null || printf "\033c"
-  
-  # Header
-  echo "================================================"
-  echo " KAERU ROBLOX MANAGER v2.0"
-  echo "================================================"
-  
-  # RAM info
-  get_ram
-  echo " RAM: ${FREE}MB / ${TOTAL}MB"
-  echo " Packages: $COUNT"
-  echo " Time: $(date '+%H:%M:%S')"
-  echo "-----------------------------------------------"
-  
-  # Tampilkan status packages
-  idx=0
-  relaunch_count=0
-  echo "NO  PACKAGE                STATUS"
-  echo "--- ---------------------  -------"
-  
-  for pkg in $PACKAGES; do
-    if is_running "$pkg"; then
-      status="✓ ONLINE"
-    else
-      status="✗ OFFLINE"
-      # Relaunch otomatis
-      log "Relaunching $pkg..."
-      launch_app "$pkg" "$idx"
-      relaunch_count=$((relaunch_count + 1))
-    fi
-    
-    # Tampilkan dengan nomor pendek
-    num=$((idx + 1))
-    if [ ${#pkg} -gt 20 ]; then
-      pkg_short="${pkg:0:17}..."
-    else
-      pkg_short="$pkg"
-    fi
-    
-    printf "%-3s %-22s %s\n" "$num" "$pkg_short" "$status"
-    idx=$((idx + 1))
-  done
-  
-  echo "-----------------------------------------------"
-  
-  if [ $relaunch_count -gt 0 ]; then
-    echo " Relaunched: $relaunch_count instance(s)"
-  fi
-  
-  # Auto clean cache setiap CACHE_INTERVAL
-  current_time=$(date +%s)
-  if [ $((current_time - last_clean)) -ge $CACHE_INTERVAL ]; then
-    clean_cache
-    last_clean=$current_time
-    echo " Cache cleaned!"
-  fi
-  
-  # Clean RAM jika rendah
-  if [ $FREE -lt $RAM_THRESHOLD ]; then
-    echo " RAM low! Cleaning..."
-    clean_cache
-    # Juga coba free pagecache
-    sync
-    echo 1 > /proc/sys/vm/drop_caches 2>/dev/null || true
-  fi
-  
-  clean_counter=$((clean_counter + 1))
-  
-  # Sleep dengan progress bar sederhana
-  echo -n " Next check in: "
-  for i in $(seq 1 $CHECK_INTERVAL); do
-    echo -n "."
-    sleep 1
-  done
-  echo ""
-done
+# Jalankan main menu
+main
