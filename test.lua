@@ -663,7 +663,7 @@ do
         Callback = function(s)
             stealthHight = tonumber(s)
         end
-    })))
+    }))
 
     local stealth = Reg("stealth", fishSupport:Toggle({
         Title = "Stealth Mode",
