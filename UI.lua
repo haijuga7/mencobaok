@@ -366,7 +366,7 @@ function DiscordLib:Window(data)
     }
     
     local function InitAutoLoad()
-        if not AutoLoadSystem.Enabled then return 
+        if not AutoLoadSystem.Enabled then return end
         
         task.wait(0.5)
         
