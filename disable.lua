@@ -2414,7 +2414,7 @@ function DiscordLib:Window(data)
                 Button.BackgroundColor3 = Color3.fromRGB(114, 137, 228)
                 Button.Size = UDim2.new(0, 401, 0, 30)
                 Button.AutoButtonColor = false
-                Button.Font = Enum.Font.Gotham
+                Button.Font = Enum.Font.GothamSemibold
                 Button.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Button.TextSize = 14.000
                 Button.Text = config.Title
@@ -2492,7 +2492,7 @@ function DiscordLib:Window(data)
                 ToggleTitle.BackgroundTransparency = 1.000
                 ToggleTitle.Position = UDim2.new(0, 5, 0, 0)
                 ToggleTitle.Size = UDim2.new(0, 200, 0, 30)
-                ToggleTitle.Font = Enum.Font.Gotham
+                ToggleTitle.Font = Enum.Font.GothamSemibold
                 ToggleTitle.Text = config.Title
                 ToggleTitle.TextColor3 = Color3.fromRGB(127, 131, 137)
                 ToggleTitle.TextSize = 14.000
@@ -2594,6 +2594,10 @@ function DiscordLib:Window(data)
                     end
                     
                     pcall(config.Callback, val)
+                end
+
+                function ToggleFunc:SetTitle(val)
+                    ToggleTitle.Text = val
                 end
                 
                 -- ✅ OVERRIDE flag yang sudah diregister di awal
@@ -2886,7 +2890,7 @@ function DiscordLib:Window(data)
                 DropdownTitle.BackgroundTransparency = 1.000
                 DropdownTitle.Position = UDim2.new(0, 5, 0, 0)
                 DropdownTitle.Size = UDim2.new(0, 200, 0, 29)
-                DropdownTitle.Font = Enum.Font.Gotham
+                DropdownTitle.Font = Enum.Font.GothamSemibold
                 DropdownTitle.Text = config.Title
                 DropdownTitle.TextColor3 = Color3.fromRGB(127, 131, 137)
                 DropdownTitle.TextSize = 14.000
@@ -3125,7 +3129,7 @@ function DiscordLib:Window(data)
                     CheckMark.BackgroundTransparency = 1.000
                     CheckMark.Position = UDim2.new(0.9, 0, 0, 0)
                     CheckMark.Size = UDim2.new(0, 29, 0, 29)
-                    CheckMark.Font = Enum.Font.GothamBold
+                    CheckMark.Font = Enum.Font.GothamSemibold
                     CheckMark.Text = ""
                     CheckMark.TextColor3 = Color3.fromRGB(114, 137, 228)
                     CheckMark.TextSize = 18.000
@@ -3570,7 +3574,7 @@ function DiscordLib:Window(data)
                 TextboxTitle.BackgroundTransparency = 1.000
                 TextboxTitle.Position = UDim2.new(0, 5, 0, 0)
                 TextboxTitle.Size = UDim2.new(0, 200, 0, 29)
-                TextboxTitle.Font = Enum.Font.Gotham
+                TextboxTitle.Font = Enum.Font.GothamSemibold
                 TextboxTitle.Text = config.Title
                 TextboxTitle.TextColor3 = Color3.fromRGB(127, 131, 137)
                 TextboxTitle.TextSize = 14.000
@@ -3646,6 +3650,7 @@ function DiscordLib:Window(data)
             end
 
             function ChannelContent:Label(text)
+                local LabelFunc = {}
                 local Label = Instance.new("TextButton")
                 local LabelTitle = Instance.new("TextLabel")
 
@@ -3656,7 +3661,7 @@ function DiscordLib:Window(data)
                 Label.Position = UDim2.new(0.261979163, 0, 0.190789461, 0)
                 Label.Size = UDim2.new(0, 401, 0, 30)
                 Label.AutoButtonColor = false
-                Label.Font = Enum.Font.Gotham
+                Label.Font = Enum.Font.GothamSemibold
                 Label.Text = ""
                 Label.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Label.TextSize = 14.000
@@ -3667,13 +3672,19 @@ function DiscordLib:Window(data)
                 LabelTitle.BackgroundTransparency = 1.000
                 LabelTitle.Position = UDim2.new(0, 5, 0, 0)
                 LabelTitle.Size = UDim2.new(0, 200, 0, 30)
-                LabelTitle.Font = Enum.Font.Gotham
+                LabelTitle.Font = Enum.Font.GothamBold
                 LabelTitle.Text = text
                 LabelTitle.TextColor3 = Color3.fromRGB(127, 131, 137)
                 LabelTitle.TextSize = 14.000
                 LabelTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+                function LabelFunc:SetTitle(val)
+                    LabelTitle.Text = val
+                end
                 
                 ChannelHolder.CanvasSize = UDim2.new(0,0,0,ChannelHolderLayout.AbsoluteContentSize.Y)
+
+                return LabelFunc
             end
 
             function ChannelContent:Bind(flag, config)
