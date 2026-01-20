@@ -3691,6 +3691,88 @@ function DiscordLib:Window(data)
                 return LabelFunc
             end
 
+            -- ============================================
+            -- PARAGRAPH FUNCTION - LENGKAP
+            -- Tambahkan ini di dalam ChannelContent (setelah function Bind)
+            -- ============================================
+            
+            function ChannelContent:Paragraph(config)
+                local ParagraphFunc = {}
+                
+                local Paragraph = Instance.new("Frame")
+                local ParagraphCorner = Instance.new("UICorner")
+                local ParagraphTitle = Instance.new("TextLabel")
+                local ParagraphDesc = Instance.new("TextLabel")
+                local ParagraphPadding = Instance.new("UIPadding")
+            
+                Paragraph.Name = "Paragraph"
+                Paragraph.Parent = ChannelHolder
+                Paragraph.BackgroundColor3 = Color3.fromRGB(42, 44, 48)
+                Paragraph.BorderSizePixel = 0
+                Paragraph.Position = UDim2.new(0, 0, 0, 0)
+                Paragraph.Size = UDim2.new(0, 401, 0, 80) -- Default height
+                Paragraph.AutomaticSize = Enum.AutomaticSize.Y -- ✅ Auto adjust height
+            
+                ParagraphCorner.CornerRadius = UDim.new(0, 4)
+                ParagraphCorner.Name = "ParagraphCorner"
+                ParagraphCorner.Parent = Paragraph
+            
+                ParagraphTitle.Name = "ParagraphTitle"
+                ParagraphTitle.Parent = Paragraph
+                ParagraphTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                ParagraphTitle.BackgroundTransparency = 1.000
+                ParagraphTitle.Position = UDim2.new(0, 0, 0, 0)
+                ParagraphTitle.Size = UDim2.new(1, 0, 0, 30)
+                ParagraphTitle.Font = Enum.Font.GothamBold
+                ParagraphTitle.Text = config.Title or "Title"
+                ParagraphTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+                ParagraphTitle.TextSize = 16.000
+                ParagraphTitle.TextXAlignment = Enum.TextXAlignment.Left
+            
+                ParagraphDesc.Name = "ParagraphDesc"
+                ParagraphDesc.Parent = Paragraph
+                ParagraphDesc.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                ParagraphDesc.BackgroundTransparency = 1.000
+                ParagraphDesc.Position = UDim2.new(0, 0, 0, 30)
+                ParagraphDesc.Size = UDim2.new(1, 0, 0, 40)
+                ParagraphDesc.Font = Enum.Font.GothamSemibold
+                ParagraphDesc.Text = config.Desc or "Description"
+                ParagraphDesc.TextColor3 = Color3.fromRGB(171, 172, 176)
+                ParagraphDesc.TextSize = 13.000
+                ParagraphDesc.TextWrapped = true
+                ParagraphDesc.TextXAlignment = Enum.TextXAlignment.Left
+                ParagraphDesc.TextYAlignment = Enum.TextYAlignment.Top
+                ParagraphDesc.AutomaticSize = Enum.AutomaticSize.Y -- ✅ Auto adjust based on text
+            
+                ParagraphPadding.Name = "ParagraphPadding"
+                ParagraphPadding.Parent = Paragraph
+                ParagraphPadding.PaddingLeft = UDim.new(0, 12)
+                ParagraphPadding.PaddingRight = UDim.new(0, 12)
+                ParagraphPadding.PaddingTop = UDim.new(0, 10)
+                ParagraphPadding.PaddingBottom = UDim.new(0, 10)
+            
+                -- ✅ Update canvas size saat text berubah
+                local function UpdateCanvasSize()
+                    task.wait(0.1) -- Wait for AutomaticSize to update
+                    ChannelHolder.CanvasSize = UDim2.new(0, 0, 0, ChannelHolderLayout.AbsoluteContentSize.Y)
+                end
+            
+                function ParagraphFunc:SetTitle(newTitle)
+                    ParagraphTitle.Text = newTitle
+                    UpdateCanvasSize()
+                end
+            
+                function ParagraphFunc:SetDesc(newDesc)
+                    ParagraphDesc.Text = newDesc
+                    UpdateCanvasSize()
+                end
+            
+                -- Initial canvas update
+                ChannelHolder.CanvasSize = UDim2.new(0, 0, 0, ChannelHolderLayout.AbsoluteContentSize.Y)
+                
+                return ParagraphFunc
+            end
+
             function ChannelContent:Bind(flag, config)
                 local Keybind = Instance.new("TextButton")
                 local KeybindTitle = Instance.new("TextLabel")
