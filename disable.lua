@@ -3631,6 +3631,10 @@ function DiscordLib:Window(data)
                     end
                     pcall(config.Callback, val)
                 end
+
+                function TextboxFunc:SetTitle(val)
+                    TextboxTitle.Text = val
+                end
                 
                 TextBox.FocusLost:Connect(function(ep)
                     if ep and #TextBox.Text > 0 then
