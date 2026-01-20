@@ -2838,14 +2838,15 @@ function DiscordLib:Window(data)
                 ChannelHolder.CanvasSize = UDim2.new(0,0,0,ChannelHolderLayout.AbsoluteContentSize.Y)
             end
 
-            -- ============================================
-            -- PERBAIKAN DROPDOWN FUNCTION
-            -- Ganti function ChannelContent:Dropdown yang lama dengan ini
-            -- ============================================
-            
             function ChannelContent:Dropdown(flag, config)
                 local DropFunc = {}
                 local selected = {}
+                
+                -- ✅ VALIDASI CONFIG
+                config = config or {}
+                config.List = config.List or {}
+                config.Value = config.Value or (config.Multi and {} or "")
+                
                 if flag then
                     DiscordLib.Flags[flag] = {
                         SetValue = function(self, val) end,
@@ -2882,7 +2883,7 @@ function DiscordLib:Window(data)
                 Dropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 Dropdown.BackgroundTransparency = 1.000
                 Dropdown.Position = UDim2.new(0.0796874985, 0, 0.445175439, 0)
-                Dropdown.Size = UDim2.new(0, 403, 0, 73) -- ✅ UKURAN TETAP (tidak berubah saat dropdown dibuka)
+                Dropdown.Size = UDim2.new(0, 403, 0, 73)
             
                 DropdownTitle.Name = "DropdownTitle"
                 DropdownTitle.Parent = Dropdown
@@ -2951,8 +2952,8 @@ function DiscordLib:Window(data)
                 DropdownFrameBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
                 DropdownFrameBtn.TextSize = 14.000
             
-                -- ✅ DROPDOWN OVERLAY CONTAINER (ZINDEX TINGGI)
-                local DropdownOverlay = Instance.new("Frame")
+                -- ✅ OVERLAY CONTAINER (CLICK TO CLOSE)
+                local DropdownOverlay = Instance.new("TextButton")
                 local DropdownFrameMainOutline = Instance.new("Frame")
                 local DropdownFrameMainOutlineCorner = Instance.new("UICorner")
                 local DropdownFrameMain = Instance.new("Frame")
@@ -2961,20 +2962,23 @@ function DiscordLib:Window(data)
                 local DropItemHolder = Instance.new("ScrollingFrame")
                 local DropItemHolderLayout = Instance.new("UIListLayout")
             
-                -- ✅ OVERLAY WRAPPER dengan ZIndex tertinggi
+                -- ✅ OVERLAY BACKGROUND (CLICKABLE untuk CLOSE)
                 DropdownOverlay.Name = "DropdownOverlay"
-                DropdownOverlay.Parent = ChannelContentFrame -- Parent ke ChannelContentFrame agar tampil di depan
-                DropdownOverlay.BackgroundTransparency = 1
+                DropdownOverlay.Parent = ChannelContentFrame
+                DropdownOverlay.BackgroundTransparency = 0.8 -- Semi-transparan agar terlihat
+                DropdownOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
                 DropdownOverlay.Size = UDim2.new(1, 0, 1, 0)
                 DropdownOverlay.Position = UDim2.new(0, 0, 0, 0)
                 DropdownOverlay.Visible = false
-                DropdownOverlay.ZIndex = 9999 -- ✅ SANGAT TINGGI!
+                DropdownOverlay.ZIndex = 9999
+                DropdownOverlay.Text = ""
+                DropdownOverlay.AutoButtonColor = false
             
                 DropdownFrameMainOutline.Name = "DropdownFrameMainOutline"
                 DropdownFrameMainOutline.Parent = DropdownOverlay
                 DropdownFrameMainOutline.BackgroundColor3 = Color3.fromRGB(37, 40, 43)
-                DropdownFrameMainOutline.Position = UDim2.new(0, DropdownFrame.AbsolutePosition.X - ChannelContentFrame.AbsolutePosition.X - 2, 0, DropdownFrame.AbsolutePosition.Y - ChannelContentFrame.AbsolutePosition.Y + 40)
-                DropdownFrameMainOutline.Size = UDim2.new(0, 396, 0, 185) -- ✅ Akan diupdate berdasarkan jumlah item
+                DropdownFrameMainOutline.Position = UDim2.new(0, 0, 0, 0)
+                DropdownFrameMainOutline.Size = UDim2.new(0, 396, 0, 185)
                 DropdownFrameMainOutline.ZIndex = 10000
             
                 DropdownFrameMainOutlineCorner.CornerRadius = UDim.new(0, 3)
@@ -2985,9 +2989,9 @@ function DiscordLib:Window(data)
                 DropdownFrameMain.Parent = DropdownOverlay
                 DropdownFrameMain.BackgroundColor3 = Color3.fromRGB(47, 49, 54)
                 DropdownFrameMain.ClipsDescendants = true
-                DropdownFrameMain.Position = UDim2.new(0, DropdownFrame.AbsolutePosition.X - ChannelContentFrame.AbsolutePosition.X, 0, DropdownFrame.AbsolutePosition.Y - ChannelContentFrame.AbsolutePosition.Y + 42)
+                DropdownFrameMain.Position = UDim2.new(0, 0, 0, 0)
                 DropdownFrameMain.Selectable = true
-                DropdownFrameMain.Size = UDim2.new(0, 392, 0, 181) -- ✅ Akan diupdate berdasarkan jumlah item
+                DropdownFrameMain.Size = UDim2.new(0, 392, 0, 181)
                 DropdownFrameMain.ZIndex = 10001
             
                 DropdownFrameMainCorner.CornerRadius = UDim.new(0, 3)
@@ -3013,31 +3017,62 @@ function DiscordLib:Window(data)
                 DropItemHolder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 DropItemHolder.BackgroundTransparency = 1.000
                 DropItemHolder.Position = UDim2.new(0, 0, 0.215384638, 0)
-                DropItemHolder.Size = UDim2.new(0, 385, 0, 174) -- ✅ Akan diupdate berdasarkan jumlah item
+                DropItemHolder.Size = UDim2.new(0, 385, 0, 174)
                 DropItemHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
                 DropItemHolder.ScrollBarThickness = 6
                 DropItemHolder.BorderSizePixel = 0
                 DropItemHolder.ScrollBarImageColor3 = Color3.fromRGB(28, 29, 32)
+                DropItemHolder.ScrollBarImageTransparency = 1
                 DropItemHolder.ZIndex = 10003
             
                 DropItemHolderLayout.Name = "ItemHolderLayout"
                 DropItemHolderLayout.Parent = DropItemHolder
                 DropItemHolderLayout.SortOrder = Enum.SortOrder.LayoutOrder
-                DropItemHolderLayout.Padding = UDim.new(0, 2) -- ✅ Tambah spacing antar item
+                DropItemHolderLayout.Padding = UDim.new(0, 2)
                 
-                -- ✅ FUNCTION untuk update ukuran dropdown adaptif
+                -- ✅ CLICK OVERLAY TO CLOSE
+                DropdownOverlay.MouseButton1Click:Connect(function()
+                    DropdownOverlay.Visible = false
+                    DropTog = false
+                end)
+                
+                -- ✅ UPDATE SIZE DROPDOWN
                 local function UpdateDropdownSize()
                     local maxVisibleItems = 6
                     local itemHeight = 29
                     local itemSpacing = 2
                     local actualItemCount = math.min(itemcount, maxVisibleItems)
                     
-                    -- Kalkulasi tinggi berdasarkan jumlah item
                     local contentHeight = (actualItemCount * itemHeight) + ((actualItemCount - 1) * itemSpacing) + 10
                     
                     DropItemHolder.Size = UDim2.new(0, 385, 0, contentHeight)
                     DropdownFrameMain.Size = UDim2.new(0, 392, 0, contentHeight + 6)
                     DropdownFrameMainOutline.Size = UDim2.new(0, 396, 0, contentHeight + 10)
+                end
+                
+                -- ✅ AUTO-POSITION (ATAS/BAWAH)
+                local function CalculateDropdownPosition()
+                    local dropX = DropdownFrame.AbsolutePosition.X - ChannelContentFrame.AbsolutePosition.X
+                    local dropY = DropdownFrame.AbsolutePosition.Y - ChannelContentFrame.AbsolutePosition.Y
+                    
+                    -- Hitung ruang tersedia di bawah
+                    local spaceBelow = ChannelContentFrame.AbsoluteSize.Y - (dropY + DropdownFrame.AbsoluteSize.Y)
+                    
+                    -- Hitung tinggi dropdown
+                    local dropdownHeight = DropdownFrameMainOutline.AbsoluteSize.Y
+                    
+                    -- ✅ JIKA RUANG DI BAWAH TIDAK CUKUP, TARUH DI ATAS
+                    if spaceBelow < dropdownHeight then
+                        -- Posisi di ATAS
+                        local yPos = dropY - dropdownHeight - 5
+                        DropdownFrameMainOutline.Position = UDim2.new(0, dropX - 2, 0, yPos)
+                        DropdownFrameMain.Position = UDim2.new(0, dropX, 0, yPos + 2)
+                    else
+                        -- Posisi di BAWAH (default)
+                        local yPos = dropY + 40
+                        DropdownFrameMainOutline.Position = UDim2.new(0, dropX - 2, 0, yPos)
+                        DropdownFrameMain.Position = UDim2.new(0, dropX, 0, yPos + 2)
+                    end
                 end
                 
                 local function UpdateDisplay()
@@ -3055,19 +3090,11 @@ function DiscordLib:Window(data)
                     pcall(config.Callback, config.Multi and selected or (selected[1] or ""))
                 end
                 
-                -- ✅ TOGGLE DROPDOWN (TIDAK MENGUBAH UKURAN PARENT)
+                -- ✅ TOGGLE DROPDOWN
                 DropdownFrameBtn.MouseButton1Click:Connect(function()
                     if DropTog == false then
-                        -- ✅ Update size sebelum menampilkan
                         UpdateDropdownSize()
-                        
-                        -- ✅ Update posisi dropdown berdasarkan posisi absolut
-                        local dropX = DropdownFrame.AbsolutePosition.X - ChannelContentFrame.AbsolutePosition.X
-                        local dropY = DropdownFrame.AbsolutePosition.Y - ChannelContentFrame.AbsolutePosition.Y + 40
-                        
-                        DropdownFrameMainOutline.Position = UDim2.new(0, dropX - 2, 0, dropY)
-                        DropdownFrameMain.Position = UDim2.new(0, dropX, 0, dropY + 2)
-                        
+                        CalculateDropdownPosition() -- ✅ HITUNG POSISI OTOMATIS
                         DropdownOverlay.Visible = true
                     else
                         DropdownOverlay.Visible = false
@@ -3078,7 +3105,7 @@ function DiscordLib:Window(data)
                 local function CreateItem(v)
                     local Item = Instance.new("TextButton")
                     local ItemCorner = Instance.new("UICorner")
-                    local ItemOutline = Instance.new("Frame") -- ✅ OUTLINE FRAME
+                    local ItemOutline = Instance.new("Frame")
                     local ItemOutlineCorner = Instance.new("UICorner")
                     local ItemText = Instance.new("TextLabel")
                     local CheckMark = Instance.new("TextLabel")
@@ -3099,10 +3126,9 @@ function DiscordLib:Window(data)
                     ItemCorner.Name = "ItemCorner"
                     ItemCorner.Parent = Item
             
-                    -- ✅ OUTLINE untuk setiap item
                     ItemOutline.Name = "ItemOutline"
                     ItemOutline.Parent = Item
-                    ItemOutline.BackgroundColor3 = Color3.fromRGB(32, 34, 37) -- Warna outline gelap
+                    ItemOutline.BackgroundColor3 = Color3.fromRGB(32, 34, 37)
                     ItemOutline.BorderSizePixel = 0
                     ItemOutline.Size = UDim2.new(1, 0, 1, 0)
                     ItemOutline.ZIndex = 10003
@@ -3135,7 +3161,6 @@ function DiscordLib:Window(data)
                     CheckMark.TextSize = 18.000
                     CheckMark.ZIndex = 10006
             
-                    -- Check if selected
                     for _, sel in pairs(selected) do
                         if sel == v then
                             CheckMark.Text = "✓"
@@ -3146,13 +3171,13 @@ function DiscordLib:Window(data)
                     Item.MouseEnter:Connect(function()
                         ItemText.TextColor3 = Color3.fromRGB(255,255,255)
                         Item.BackgroundTransparency = 0
-                        ItemOutline.BackgroundColor3 = Color3.fromRGB(114, 137, 228) -- ✅ Outline berubah saat hover
+                        ItemOutline.BackgroundColor3 = Color3.fromRGB(114, 137, 228)
                     end)
             
                     Item.MouseLeave:Connect(function()
                         ItemText.TextColor3 = Color3.fromRGB(212, 212, 212)
                         Item.BackgroundTransparency = 1
-                        ItemOutline.BackgroundColor3 = Color3.fromRGB(32, 34, 37) -- ✅ Outline kembali normal
+                        ItemOutline.BackgroundColor3 = Color3.fromRGB(32, 34, 37)
                     end)
             
                     Item.MouseButton1Click:Connect(function()
@@ -3181,26 +3206,22 @@ function DiscordLib:Window(data)
                             CheckMark.Text = "✓"
                             UpdateDisplay()
                             
-                            -- Auto close
                             DropdownOverlay.Visible = false
                             DropTog = false
                         end
                     end)
                 end
                 
-                -- ✅ ADD ITEMS
+                -- ADD ITEMS
                 for i,v in pairs(config.List) do
                     itemcount = itemcount + 1
                     CreateItem(v)
                 end
                 
-                -- ✅ UPDATE CANVAS SIZE untuk scrolling
                 DropItemHolder.CanvasSize = UDim2.new(0, 0, 0, DropItemHolderLayout.AbsoluteContentSize.Y)
-                
-                -- ✅ Set ukuran awal dropdown
                 UpdateDropdownSize()
                 
-                -- SetValue function
+                -- FUNCTIONS
                 function DropFunc:SetValue(val)
                     if config.Multi then
                         if type(val) == "table" then
@@ -3246,7 +3267,7 @@ function DiscordLib:Window(data)
                     itemcount = itemcount + 1
                     CreateItem(textadd)
                     DropItemHolder.CanvasSize = UDim2.new(0, 0, 0, DropItemHolderLayout.AbsoluteContentSize.Y)
-                    UpdateDropdownSize() -- ✅ Update size saat menambah item
+                    UpdateDropdownSize()
                 end
                 
                 function DropFunc:Refresh(newlist)
@@ -3264,7 +3285,7 @@ function DiscordLib:Window(data)
                     end
                     
                     DropItemHolder.CanvasSize = UDim2.new(0, 0, 0, DropItemHolderLayout.AbsoluteContentSize.Y)
-                    UpdateDropdownSize() -- ✅ Update size saat refresh
+                    UpdateDropdownSize()
                 end
                 
                 if flag then
@@ -3273,7 +3294,6 @@ function DiscordLib:Window(data)
                 end
                 
                 UpdateDisplay()
-                
                 ChannelHolder.CanvasSize = UDim2.new(0,0,0,ChannelHolderLayout.AbsoluteContentSize.Y)
                 return DropFunc
             end
