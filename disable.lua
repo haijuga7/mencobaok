@@ -298,10 +298,10 @@ function DiscordLib:Window(data)
     Title.BackgroundTransparency = 1.000
     Title.Position = UDim2.new(0.0102790017, 0, 0, 0)
     Title.Size = UDim2.new(0, 192, 0, 23)
-    Title.Font = Enum.Font.Gotham
+    Title.Font = Enum.Font.GothamBold
     Title.Text = data.Title
-    Title.TextColor3 = Color3.fromRGB(99, 102, 109)
-    Title.TextSize = 13.000
+    Title.TextColor3 = Color3.fromRGB(255, 10, 10)
+    Title.TextSize = 20.000
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
     CloseBtn.Name = "CloseBtn"
