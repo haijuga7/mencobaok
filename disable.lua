@@ -1,13 +1,39 @@
 -- ============================================
--- CONFIG SYSTEM (Tambahkan di awal script)
+-- OPTIMIZED CONFIG SYSTEM (Anti-Crash)
 -- ============================================
 local DiscordLib = {}
 DiscordLib.Flags = {}
 DiscordLib.ConfigSystem = {
     Flags = {},
     ConfigFolder = "DiscordLibConfigs",
-    LastConfigFile = "DiscordLibLastConfig.json" -- File untuk menyimpan config terakhir
+    LastConfigFile = "DiscordLibLastConfig.json",
+    
+    -- ✅ OPTIMIZATION: Debounce untuk mencegah spam save
+    _saveDebounce = {},
+    _autoSaveQueue = {},
+    _isAutoSaving = false
 }
+
+-- ✅ HELPER: Compress data (hapus nilai default untuk hemat size)
+local function CompressConfig(data)
+    local compressed = {}
+    for flag, value in pairs(data) do
+        -- Skip nilai boolean false dan string kosong (hemat space)
+        if value == false or value == "" or value == nil then
+            -- Don't save default values
+        elseif type(value) == "table" and #value == 0 then
+            -- Don't save empty tables
+        else
+            compressed[flag] = value
+        end
+    end
+    return compressed
+end
+
+-- ✅ HELPER: Decompress data
+local function DecompressConfig(compressed)
+    return compressed or {}
+end
 
 function DiscordLib.ConfigSystem:SetFlag(flag, value)
     self.Flags[flag] = value
@@ -17,43 +43,92 @@ function DiscordLib.ConfigSystem:GetFlag(flag)
     return self.Flags[flag]
 end
 
+-- ✅ OPTIMIZED: Save dengan debounce (delay 0.5s untuk batch save)
 function DiscordLib.ConfigSystem:SaveConfig(name)
+    -- ✅ Debounce: Jangan save terlalu sering
+    if self._saveDebounce[name] then
+        return false -- Skip jika baru saja save
+    end
+    
+    self._saveDebounce[name] = true
+    
     local success = pcall(function()
         if not isfolder(self.ConfigFolder) then
             makefolder(self.ConfigFolder)
         end
-        writefile(self.ConfigFolder.."/"..name..".json", game:GetService("HttpService"):JSONEncode(self.Flags))
+        
+        -- ✅ Compress data sebelum save
+        local compressed = CompressConfig(self.Flags)
+        local encoded = game:GetService("HttpService"):JSONEncode(compressed)
+        
+        writefile(self.ConfigFolder.."/"..name..".json", encoded)
     end)
+    
+    -- ✅ Reset debounce setelah 500ms
+    task.delay(0.5, function()
+        self._saveDebounce[name] = nil
+    end)
+    
     return success
 end
 
+-- ✅ OPTIMIZED: Load dengan error handling
 function DiscordLib.ConfigSystem:LoadConfig(name)
     local success, data = pcall(function()
-        return game:GetService("HttpService"):JSONDecode(
-            readfile(self.ConfigFolder.."/"..name..".json")
-        )
+        local filePath = self.ConfigFolder.."/"..name..".json"
+        
+        if not isfile(filePath) then
+            return nil
+        end
+        
+        local content = readfile(filePath)
+        return game:GetService("HttpService"):JSONDecode(content)
     end)
     
     if success and data then
-        for flag, value in pairs(data) do
-            -- ✅ PERBAIKAN: Check if flag exists dan has SetValue
-            if DiscordLib.Flags[flag] then
-                if DiscordLib.Flags[flag].SetValue then
-                    -- ✅ Wrap in pcall untuk catch errors
-                    local success, err = pcall(function()
-                        DiscordLib.Flags[flag]:SetValue(value)
-                    end)
-                    
-                    if not success then
-                        warn("[Config] Failed to set flag '" .. flag .. "': " .. tostring(err))
+        -- ✅ Decompress data
+        local decompressed = DecompressConfig(data)
+        
+        -- ✅ LAZY LOAD: Jangan set semua flag sekaligus (bagi jadi chunks)
+        local flagList = {}
+        for flag, value in pairs(decompressed) do
+            table.insert(flagList, {flag = flag, value = value})
+        end
+        
+        -- ✅ Load dalam batch (10 flag per frame untuk avoid freeze)
+        local batchSize = 10
+        local currentIndex = 1
+        
+        local function loadBatch()
+            local endIndex = math.min(currentIndex + batchSize - 1, #flagList)
+            
+            for i = currentIndex, endIndex do
+                local item = flagList[i]
+                
+                if DiscordLib.Flags[item.flag] then
+                    if DiscordLib.Flags[item.flag].SetValue then
+                        local ok, err = pcall(function()
+                            DiscordLib.Flags[item.flag]:SetValue(item.value)
+                        end)
+                        
+                        if not ok then
+                            warn("[Config] Failed to load flag '" .. item.flag .. "': " .. tostring(err))
+                        end
                     end
-                else
-                    warn("[Config] Flag '" .. flag .. "' exists but has no SetValue function")
                 end
-            else
-                warn("[Config] Flag '" .. flag .. "' not found in DiscordLib.Flags")
+            end
+            
+            currentIndex = endIndex + 1
+            
+            -- ✅ Lanjutkan batch berikutnya di frame berikutnya
+            if currentIndex <= #flagList then
+                task.wait() -- Yield ke frame berikutnya (avoid freeze)
+                loadBatch()
             end
         end
+        
+        -- ✅ Start loading
+        spawn(loadBatch)
         
         return true
     end
@@ -61,13 +136,20 @@ function DiscordLib.ConfigSystem:LoadConfig(name)
 end
 
 function DiscordLib.ConfigSystem:AutoLoadConfig(name)
-    writefile(self.LastConfigFile, name)
+    local success = pcall(function()
+        writefile(self.LastConfigFile, name)
+    end)
+    return success
 end
 
 function DiscordLib.ConfigSystem:GetLastConfig()
     local success, configName = pcall(function()
-        return readfile(self.LastConfigFile)
+        if isfile(self.LastConfigFile) then
+            return readfile(self.LastConfigFile)
+        end
+        return nil
     end)
+    
     if success and configName then
         return configName
     end
@@ -76,7 +158,10 @@ end
 
 function DiscordLib.ConfigSystem:DeleteConfig(name)
     return pcall(function()
-        delfile(self.ConfigFolder.."/"..name..".json")
+        local filePath = self.ConfigFolder.."/"..name..".json"
+        if isfile(filePath) then
+            delfile(filePath)
+        end
     end)
 end
 
@@ -92,13 +177,11 @@ function DiscordLib.ConfigSystem:ListConfigs()
                 if file:match("%.json$") then
                     local configName = file:gsub(self.ConfigFolder .. "/", ""):gsub("%.json$", "")
                     table.insert(configs, configName)
-                    print("[Config] Found:", configName) -- ✅ Debug print
                 end
             end
         end
     end)
     
-    print("[Config] Total configs found:", #configs) -- ✅ Debug print
     return configs
 end
 
@@ -208,44 +291,62 @@ function DiscordLib:Window(data)
     local function InitAutoLoad()
         if not AutoLoadSystem.Enabled then return end
         
-        -- ✅ Tambah delay lebih lama untuk memastikan semua flags registered
-        task.wait(2)  -- Naikkan dari 0.5 ke 2 detik
+        -- ✅ DELAY LEBIH LAMA: Tunggu semua UI selesai render
+        task.wait(3) -- Naikkan dari 2 ke 3 detik
         
         local configToLoad = DiscordLib.ConfigSystem:GetLastConfig()
         
         if configToLoad then
-            print("[DiscordLib] Attempting to load config:", configToLoad)
-            local success = DiscordLib.ConfigSystem:LoadConfig(configToLoad)
+            print("[DiscordLib] Loading config:", configToLoad)
             
-            if success and AutoLoadSystem.ShowNotification then
-                DiscordLib:Notification(
-                    "Config Loaded",
-                    "Loaded config: " .. configToLoad,
-                    "OK"
-                )
-            elseif not success and AutoLoadSystem.ShowNotification then
-                DiscordLib:Notification(
-                    "Welcome!",
-                    "No saved config found. Using defaults.",
-                    "OK"
-                )
-            end
+            -- ✅ ASYNC LOAD: Jangan block main thread
+            spawn(function()
+                local success = DiscordLib.ConfigSystem:LoadConfig(configToLoad)
+                
+                if success and AutoLoadSystem.ShowNotification then
+                    task.wait(1) -- Tunggu load selesai
+                    pcall(function()
+                        DiscordLib:Notification(
+                            "Config Loaded",
+                            "Loaded config: " .. configToLoad,
+                            "OK"
+                        )
+                    end)
+                elseif not success and AutoLoadSystem.ShowNotification then
+                    pcall(function()
+                        DiscordLib:Notification(
+                            "Welcome!",
+                            "No saved config found. Using defaults.",
+                            "OK"
+                        )
+                    end)
+                end
+            end)
         end
         
-        -- Auto-save setup
+        -- ✅ OPTIMIZED AUTO-SAVE: Save setiap 60 detik dengan debounce
         if AutoLoadSystem.AutoSave then
             spawn(function()
-                while task.wait(AutoLoadSystem.AutoSaveInterval) do
+                while task.wait(AutoLoadSystem.AutoSaveInterval or 60) do
                     local nameToSave = AutoLoadSystem.ConfigName or 
                                        DiscordLib.ConfigSystem:GetLastConfig() or 
                                        "AutoSave"
-                    DiscordLib.ConfigSystem:SaveConfig(nameToSave)
-                    print("[DiscordLib] Auto-saved config:", nameToSave)
+                    
+                    -- ✅ Save di background thread
+                    spawn(function()
+                        local ok = pcall(function()
+                            DiscordLib.ConfigSystem:SaveConfig(nameToSave)
+                        end)
+                        
+                        if ok then
+                            print("[DiscordLib] Auto-saved config:", nameToSave)
+                        end
+                    end)
                 end
             end)
         end
     end
-    
+        
     local MainFrame = Instance.new("Frame")
     local TopFrame = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
