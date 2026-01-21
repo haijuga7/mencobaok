@@ -1,4 +1,4 @@
-local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/haijuga7/mencobaok/refs/heads/main/UI/discord.lua"))()
+local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/haijuga7/mencobaok/refs/heads/main/UI/discordUI.lua"))()
 
 -- Rest of your code
 local win = DiscordLib:Window({
