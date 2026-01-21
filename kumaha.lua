@@ -2021,6 +2021,9 @@ do
     local SelectedRarityCategories = {}
     local SelectedWebhookItemNames = {} -- Variabel baru untuk filter nama
     
+    local SelectedWebhookSpecialMutation = {}
+    local SelectedWebhookSpecialItemNames = {}
+    
     -- Kita butuh daftar nama item (Copy fungsi helper ini ke dalam tab webhook atau taruh di global scope)
     local function getWebhookItemOptions()
         local itemNames = {}
@@ -2044,6 +2047,7 @@ do
     local GLOBAL_RARITY_FILTER = {"SECRET", "TROPHY", "COLLECTIBLE", "DEV"}
 
     local RarityList = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Trophy", "Collectible", "DEV"}
+    local MutationList = {"Shiny", "Gemstone", "Corrupt", "Galaxy", "Holographic", "Ghost", "Lightning", "Fairy Dust", "Gold", "Midnight", "Radioactive", "Stone", "Albino", "Sandy", "Acidic", "Disco", "Frozen", "Noob"}
     
     local REObtainedNewFishNotification = GetRemote("RE/ObtainedNewFishNotification")
     local HttpService = game:GetService("HttpService")
@@ -2137,7 +2141,7 @@ do
         return 0x00BFFF
     end
 
-    local function shouldNotify(fishRarityUpper, fishMetadata, fishName)
+    local function shouldNotify(fishRarityUpper, fishMetadata, fishName, mutasi)
         -- Cek Filter Rarity
         if #SelectedRarityCategories > 0 and table.find(SelectedRarityCategories, fishRarityUpper) then
             return true
@@ -2147,10 +2151,9 @@ do
         if #SelectedWebhookItemNames > 0 and table.find(SelectedWebhookItemNames, fishName) then
             return true
         end
-
-        -- Cek Mutasi
-        if _G.NotifyOnMutation and (fishMetadata.Shiny or fishMetadata.VariantId) then
-             return true
+        
+        if #SelectedWebhookSpecialItemNames > 0 and #SelectedWebhookSpecialMutation > 0 and table.find(SelectedWebhookSpecialItemNames, fishName) and table.find(SelectedWebhookSpecialMutation, mutasi) then
+            return true
         end
         
         return false
@@ -2226,7 +2229,7 @@ do
             -- ************************************************************
             -- 1. LOGIKA WEBHOOK PRIBADI (USER'S WEBHOOK)
             -- ************************************************************
-            local isUserFilterMatch = shouldNotify(fishRarityUpper, metadata, fishName)
+            local isUserFilterMatch = shouldNotify(fishRarityUpper, metadata, fishName, mutationString)
 
             if isWebhookEnabled and WEBHOOK_URL ~= "" and isUserFilterMatch then
                 local title_private = string.format("<:TEXTURENOBG:1438662703722790992> AutoFish | Webhook\n\n<a:ChipiChapa:1438661193857503304> New Fish Caught! (%s)", fishName)
@@ -2303,7 +2306,7 @@ do
     
     local inputUrl = webMain:Textbox("hookURL", {
         Title = "WebHook Link",
-        Placeholder = "ex: https://discord.com/xxxx",
+        Placeholder = "e.g : https://discord.com/xxxx",
         Callback = function(val)
             WEBHOOK_URL = val
         end
@@ -2336,13 +2339,12 @@ do
     })
 
     local hookRarity = webMain:Dropdown("hookRarity", {
-        Title = "Filter by Specific Name",
+        Title = "Filter by Specific Rarity",
         List = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Trophy", "Collectible", "DEV"},
         Multi = true, 
         Callback = function(val)
             SelectedRarityCategories = val
         end
-        
     })
     
     WebhookStatusParagraph = webMain:Paragraph({
@@ -2378,6 +2380,28 @@ do
             end
         end
     })
+
+    webMain:Seperator()
+    webMain:Label("WebHook Special Name Fish + Mutation")
+    
+    local sHookFishname = webMain:Dropdown("sHookfishname", {
+        Title = "Filter by Specific Name",
+        List = getWebhookItemOptions(),
+        Multi = true, 
+        Callback = function(val)
+            SelectedWebhookSpecialItemNames = val
+        end
+    })
+    
+    local sHookMutasi = webMain:Dropdown("sHookMutasi", {
+        Title = "Filter by Mutation",
+        List = MutationList,
+        Multi = true,
+        Callback = function(val)
+            SelectedWebhookSpecialMutation = val
+        end
+    })
+    
 end
 
 do
@@ -2866,9 +2890,6 @@ do
             task.delay(0.2, function()
                 configDrop:Refresh(DiscordLib.ConfigSystem:ListConfigs())
             end)
-            
-            configInput:SetValue("")
-            
             print("[Config] ✅ Created new config:", saveName)
             
             DiscordLib:Notification(
@@ -2876,6 +2897,8 @@ do
                 "Config '" .. saveName .. "' created successfully!",
                 "OK"
             )
+            configInput:SetValue("")
+            configDrop:SetValue("")
         end
     })
     
@@ -2925,8 +2948,6 @@ do
                 configDrop:Refresh(DiscordLib.ConfigSystem:ListConfigs())
             end)
             
-            configInput:SetValue("")
-            
             print("[Config] ✅ Overwritten config:", saveName)
             
             DiscordLib:Notification(
@@ -2934,6 +2955,8 @@ do
                 "Config '" .. saveName .. "' has been updated!",
                 "OK"
             )
+            configInput:SetValue("")
+            configDrop:SetValue("")
         end
     })
     
@@ -2979,9 +3002,9 @@ do
             -- ✅ Load config (progressive, non-blocking)
             DiscordLib.ConfigSystem:LoadConfig(saveName, false)
             
-            configInput:SetValue("")
-            
             print("[Config] ⚡ Started loading:", saveName)
+            configInput:SetValue("")
+            configDrop:SetValue("")
         end
     })
     
@@ -3029,8 +3052,6 @@ do
                 configDrop:Refresh(DiscordLib.ConfigSystem:ListConfigs())
             end)
             
-            configInput:SetValue("")
-            
             print("[Config] ⚡ Deleted config:", saveName)
             
             DiscordLib:Notification(
@@ -3038,6 +3059,8 @@ do
                 "Config '" .. saveName .. "' deleted successfully!",
                 "OK"
             )
+            configInput:SetValue("")
+            configDrop:SetValue("")
         end
     })
     
@@ -3079,8 +3102,6 @@ do
             -- ✅ SET AUTO-LOAD
             DiscordLib.ConfigSystem:AutoLoadConfig(saveName)
             
-            configInput:SetValue("")
-            
             print("[Config] ⚡ Auto-load set:", saveName)
             
             DiscordLib:Notification(
@@ -3088,22 +3109,8 @@ do
                 "Config '" .. saveName .. "' will auto-load on startup!",
                 "OK"
             )
-        end
-    })
-    
-    -- ✅ BONUS: Clear Cache Button
-    setConfig:Button({
-        Title = "Clear Cache",
-        Callback = function()
-            DiscordLib.ConfigSystem:ClearCache()
-            
-            print("[Config] ⚡ Cache cleared")
-            
-            DiscordLib:Notification(
-                "Cache Cleared 🧹",
-                "Config cache has been cleared!",
-                "OK"
-            )
+            configInput:SetValue("")
+            configDrop:SetValue("")
         end
     })
 end
