@@ -2665,9 +2665,8 @@ servMain:Button({
         -- ✅ FIXED: Recreate channels (clear old data)
         if servAsc then
             -- Channel sudah ada, skip recreate (Discord UI limitation)
-            print("⚠️ Channels already exist. Restart script to regenerate.")
-            isGenerating = false
-            return
+            servAsc = nil
+            servDesc = nil
         end
         
         -- Create channels ONCE
