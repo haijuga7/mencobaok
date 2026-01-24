@@ -3319,7 +3319,7 @@ end
 game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
     Local_Player = game.Players.Local_Player
     if savedPosition then
-        print("saved")
+        task.wait(1)
         TeleportToSavedPosition()
     end
     task.wait(1) 
