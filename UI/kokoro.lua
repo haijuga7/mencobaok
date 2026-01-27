@@ -2339,7 +2339,7 @@ do
     end
     
     -- Variabel KHUSUS untuk Global Webhook
-    local GLOBAL_WEBHOOK_URL = "https://discord.com/api/webhooks/1444927252801519717/W_gpbURUmRP9XG_kpcgprdYOd4gxTb4ds8bzUK615WCoaj9wEE2POx6MJOr3KCPejt_T"
+    local GLOBAL_WEBHOOK_URL = "https://discord.com/api/webhooks/1460897596636663808/wZPZGfN8IE9m9GPrQ6Hxtjv7L4Tm4JM-2vn9VVKhBm5WXgqtdt_jdaJENo3Um8ZXup4T"
     local GLOBAL_WEBHOOK_USERNAME = "AutoFish | Community"
     local GLOBAL_RARITY_FILTER = {"SECRET", "TROPHY", "COLLECTIBLE", "DEV"}
 
