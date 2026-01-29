@@ -3298,12 +3298,12 @@ do
     })
 end
 
-if game.Players.LocalPlayer.Character then
-    if isfile(SAVE_FILE_NAME) then
+task.spawn(function()
+    if isfile(next_path) then
         LoadPosition()
         TeleportToSavedPosition()
     end
-end
+end)
 
 -- Auto reload on respawn
 game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
