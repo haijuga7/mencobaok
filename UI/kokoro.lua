@@ -1078,14 +1078,13 @@ do
     setreadonly(mt, true)
     
     local function instantOk()
+        RF_CancelFishingInputs:InvokeServer(1, 0.99)
         task.wait(0.001)
         RF_ChargeFishingRod:InvokeServer(1, 0.999)
-        task.wait(0.016)
+        task.wait(0.1)
         RF_RequestFishingMinigameStarted:InvokeServer(1, 0.999)
         task.wait(insDe)
         RE_FishingCompleted:FireServer()
-        task.wait(0.3)
-        RF_CancelFishingInputs:InvokeServer()
     end
     
     local function blatantFishv1()
