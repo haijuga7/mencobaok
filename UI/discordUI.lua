@@ -360,7 +360,7 @@ Discord.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 function DiscordLib:Window(data)
     local currentservertoggled = ""
-    local minimized = false
+    local minimized = true
     local fs = false
     local settingsopened = false
     
