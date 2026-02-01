@@ -1078,7 +1078,7 @@ do
     setreadonly(mt, true)
     
     local function instantOk()
-        RF_CancelFishingInputs:InvokeServer(1, 0.99)
+        RF_CancelFishingInputs:InvokeServer(true)
         task.wait(0.001)
         RF_ChargeFishingRod:InvokeServer(1, 0.999)
         task.wait(0.1)
@@ -1089,7 +1089,7 @@ do
     
     local function blatantFishv1()
         task.spawn(function()
-            RF_CancelFishingInputs:InvokeServer(1, 0.99)
+            RF_CancelFishingInputs:InvokeServer(true)
         end)
         task.spawn(function()
             task.wait(0.001)
@@ -1105,7 +1105,7 @@ do
     
     local function blatantFishv2()
         task.spawn(function()
-            pcall(function() RF_CancelFishingInputs:InvokeServer() end)
+            pcall(function() RF_CancelFishingInputs:InvokeServer(true) end)
         end)
         task.spawn(function()
             task.wait(0.001)
