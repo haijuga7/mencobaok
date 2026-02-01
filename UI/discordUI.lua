@@ -461,6 +461,7 @@ function DiscordLib:Window(data)
     MainFrame.ClipsDescendants = true
     MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     MainFrame.Size = UDim2.new(0, 681, 0, 396)
+    Mainframe.Visible = false
 
     TopFrame.Name = "TopFrame"
     TopFrame.Parent = MainFrame
@@ -548,7 +549,7 @@ function DiscordLib:Window(data)
     FloatingIcon.BackgroundColor3 = Color3.fromRGB(114, 137, 228)
     FloatingIcon.Position = UDim2.new(0.1, 0, 0.9, 0) -- Bottom left corner
     FloatingIcon.Size = UDim2.new(0, 60, 0, 60)
-    FloatingIcon.Visible = false
+    FloatingIcon.Visible = true
     FloatingIcon.AutoButtonColor = false
     FloatingIcon.ZIndex = 999
     
