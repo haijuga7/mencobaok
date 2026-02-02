@@ -1078,10 +1078,8 @@ do
     setreadonly(mt, true)
     
     local function instantOk()
-        RF_ChargeFishingRod:InvokeServer(1, 0.999)
-        task.wait(0.1)
-        RF_RequestFishingMinigameStarted:InvokeServer(1, 0.999)
-        task.wait(insDe)
+        RF_ChargeFishingRod:InvokeServer(nil, nil, 1770042435.749, nil)
+        RF_RequestFishingMinigameStarted:InvokeServer(-0.98799896240234, 0.11051638743879, 1770042435.864)
         RE_FishingCompleted:FireServer()
     end
     
@@ -1155,7 +1153,7 @@ do
                 task.spawn(function()
                     while InstantState do
                         instantOk()
-                        task.wait(0.1) 
+                        task.wait(0.001)
                     end
                 end)
             end
