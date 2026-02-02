@@ -939,7 +939,7 @@ do
     local RE_EquipToolFromHotbar = GetRemote("RE/EquipToolFromHotbar")
     local RF_ChargeFishingRod    = GetRemote("RF/ChargeFishingRod")
     local RF_RequestFishingMinigameStarted = GetRemote("RF/RequestFishingMinigameStarted")
-    local RE_FishingCompleted    = GetRemote("RE/FishingCompleted")
+    local RE_FishingCompleted    = GetRemote("RE/CatchFishCompleted")
     local RF_CancelFishingInputs = GetRemote("RF/CancelFishingInputs")
     local RF_UpdateAutoFishingState = GetRemote("RF/UpdateAutoFishingState")
     
