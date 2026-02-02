@@ -1080,7 +1080,7 @@ do
     local function instantOk()
         RF_ChargeFishingRod:InvokeServer(nil, nil, 1770042435.749, nil)
         RF_RequestFishingMinigameStarted:InvokeServer(-0.98799896240234, 0.11051638743879, 1770042435.864)
-        RE_FishingCompleted:FireServer()
+        RE_FishingCompleted:InvokeServer()
     end
     
     local function blatantFishv1()
