@@ -1082,7 +1082,7 @@ do
     end
 
     local function blatantFishv1()
-        for i = 1, 3 do
+        for i = 1, 4 do
             task.wait(0.035)
             task.spawn(function()
                 RF_ChargeFishingRod:InvokeServer(nil, nil, nil, 1769972555.6933)
