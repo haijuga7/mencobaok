@@ -4225,7 +4225,9 @@ function DiscordLib:Window(data)
         task.wait(1)
         InitAutoLoad()
     end)
-    
+
+    MainFrame.Visible = false
+    FloatingIcon.Visible = true
     return ServerHold
 end
 return DiscordLib
