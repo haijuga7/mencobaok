@@ -76,7 +76,7 @@ local function get_path()
     local playerUserId = tostring(LocalPlayer.UserId)
     
     -- Format: DiscordLibConfigs/Username_UserID
-    local playerFolder = "DiscordLibConfigs" .. "/" .. playerUsername .. "_" .. playerUserId
+    local playerFolder = "DiscordLibConfigs" .. "/" .. playerUsername
 
     if not isfolder(playerFolder) then
         makefolder(playerFolder)
