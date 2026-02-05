@@ -3298,7 +3298,6 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
     if savedPosition then
         TeleportToSavedPosition()
     end
-    InitializeIcon()
 end)
 
 do
