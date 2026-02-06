@@ -3519,9 +3519,6 @@ function DiscordLib:Window(data)
                     
                     RefreshOptions("")
                     SearchBox.Text = ""
-                    
-                    task.wait(0.2)
-                    pcall(function() SearchBox:CaptureFocus() end)
                 end
                 
                 function DropFunc:Close()
