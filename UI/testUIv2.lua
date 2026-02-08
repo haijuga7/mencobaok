@@ -46,7 +46,7 @@ local function GetPlayerAutoLoadFolder()
     local playerUserId = tostring(plr.UserId)
     
     -- Format: DiscordLibConfigs/Username_UserID
-    local playerFolder = DiscordLib.ConfigSystem.ConfigFolder .. "/" .. playerUsername .. "_" .. playerUserId
+    local playerFolder = DiscordLib.ConfigSystem.ConfigFolder .. "/" .. playerUsername
     
     if not isfolder(playerFolder) then
         makefolder(playerFolder)
