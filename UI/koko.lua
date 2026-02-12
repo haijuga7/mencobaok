@@ -70,7 +70,7 @@ local stealthHight = 110
 local SAVE_FILE_NAME = "Saved_Posision.json"
 
 local RPath = {"Packages", "_Index", "sleitnick_net@0.2.0", "net"}
-
+local RE_EquipToolFromHotbar = GetRemote("RE/EquipToolFromHotbar")
 local PlayerDataReplion = nil
 
 local function get_path()
