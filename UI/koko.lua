@@ -3298,6 +3298,7 @@ end)
 
 -- Auto reload on respawn
 game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+    pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
     task.wait(1)
     if savedPosition then
         TeleportToSavedPosition()
